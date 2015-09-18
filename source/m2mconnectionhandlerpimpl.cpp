@@ -88,7 +88,10 @@ M2MConnectionHandlerPimpl::~M2MConnectionHandlerPimpl()
         free(_socket_address);
     }
 
+#if 0
+//should be #ifndef ILB
     delete _security_impl;
+#endif
 }
 
 bool M2MConnectionHandlerPimpl::bind_connection(const uint16_t listen_port)
@@ -133,11 +136,15 @@ bool M2MConnectionHandlerPimpl::send_data(uint8_t *data,
     }
     socket_error_t error = SOCKET_ERROR_NONE;
     if( _use_secure_connection ){
+#warning "mab: check M2MConnectionHandlerPimpl::send_data"
+#if 0
+//should be #ifndef ILB
         if( _security_impl->send_message(data, data_len) > 0){
             error = SOCKET_ERROR_NONE;
         }else{
             error = SOCKET_ERROR_UNKNOWN;
         }
+#endif
     }else{
         error = _socket->send_to(data, data_len,_resolved_Address,address->port);
     }
@@ -197,6 +204,9 @@ void M2MConnectionHandlerPimpl::receive_handshake_handler(Socket */*socket*/)
 {
     memset(_receive_buffer, 0, BUFFER_LENGTH);
     if( _is_handshaking ){
+#warning "mab: check M2MConnectionHandlerPimpl::receive_handshake_handler"
+#if 0
+//should be #ifndef ILB
         int ret = _security_impl->continue_connecting();
         if( ret == M2MConnectionHandler::CONNECTION_ERROR_WANTS_READ ){ //We wait for next readable event
             return;
@@ -214,6 +224,7 @@ void M2MConnectionHandlerPimpl::receive_handshake_handler(Socket */*socket*/)
             _socket->setOnReadable(NULL);
             _observer.socket_error(4);
         }
+#endif
     }
 }
 
@@ -224,6 +235,9 @@ void M2MConnectionHandlerPimpl::receive_handler(Socket */*socket*/)
     SocketAddr remote_address;
     uint16_t remote_port;
     if( _use_secure_connection ){
+#warning "mab: check M2MConnectionHandlerPimpl::receive_handler"
+#if 0
+//should be #ifndef ILB
         int rcv_size = _security_impl->read(_receive_buffer, receive_length);
         if(rcv_size >= 0){
             receive_length = rcv_size;
@@ -231,6 +245,7 @@ void M2MConnectionHandlerPimpl::receive_handler(Socket */*socket*/)
             _observer.socket_error(1);
             return;
         }
+#endif
     }else{
         socket_error_t error = _socket->recv_from(_receive_buffer, &receive_length,&remote_address,&remote_port);
         if (SOCKET_ERROR_NONE == error) {
@@ -274,6 +289,9 @@ void M2MConnectionHandlerPimpl::dns_handler(Socket */*socket*/, struct socket_ad
     _socket_address->_stack = _network_stack;
     _socket_address->_port = _server_port;
 
+#warning "mab: check M2MConnectionHandlerPimpl::dns_handler"
+#if 0
+//should be #ifndef ILB
     if( _security ){
         if( _security->resource_value_int(M2MSecurity::SecurityMode) == M2MSecurity::Certificate ||
            _security->resource_value_int(M2MSecurity::SecurityMode) == M2MSecurity::Psk ){
@@ -293,6 +311,7 @@ void M2MConnectionHandlerPimpl::dns_handler(Socket */*socket*/, struct socket_ad
             }
         }
     }
+#endif
     if( !_is_handshaking ){
         _observer.address_ready(*_socket_address,
                                 _server_type,
