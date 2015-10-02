@@ -21,7 +21,8 @@
 #include "mbed-client/m2mconnectionobserver.h"
 #include "mbed-client/m2mconnectionsecurity.h"
 #include "nsdl-c/sn_nsdl.h"
-#include "mbed-net-sockets/UDPSocket.h"
+#include "mbed-net-sockets/Socket.h"
+#include "mbed-net-socket-abstract/socket_api.h"
 
 using namespace mbed::Sockets::v0;
 
@@ -33,7 +34,21 @@ class M2MSecurity;
  * This class handles the socket connection for LWM2M Client
  */
 
+
 class M2MConnectionHandlerPimpl {
+private:
+    class MbedSocket : public Socket{
+    public:
+        MbedSocket(socket_stack_t stack, socket_proto_family_t fa) : Socket(stack){_socket.family = fa;}
+
+        ~MbedSocket(){}
+
+        socket_error_t connect(const SocketAddr *address, const uint16_t port){
+            if( _socket.api )
+                return _socket.api->connect(&_socket, address->getAddr(), port);
+            return SOCKET_ERROR_UNKNOWN;
+        }
+    };
 
 public:
 
@@ -41,8 +56,9 @@ public:
     * @brief Constructor
     */
     M2MConnectionHandlerPimpl(M2MConnectionHandler* base, M2MConnectionObserver &observer,
-                             M2MConnectionSecurity* sec,
-                             M2MInterface::NetworkStack stack);
+                              M2MConnectionSecurity* sec,
+                              M2MInterface::BindingMode mode,
+                              M2MInterface::NetworkStack stack);
 
     /**
     * @brief Destructor
@@ -141,6 +157,7 @@ private:
     bool                                        _use_secure_connection;
     String                                      _server_address;
     unsigned char                               _receive_buffer[1024];
+    M2MInterface::BindingMode                   _binding_mode;
     M2MInterface::NetworkStack                  _network_stack;
     uint8_t                                     _received_address[16];
     M2MConnectionObserver::SocketAddress        *_socket_address;
@@ -150,7 +167,7 @@ private:
     bool                                        _resolved;
     socket_stack_t                              _socket_stack;
     bool                                        _is_handshaking;
-    UDPSocket                                   *_socket;            //owned
+    MbedSocket                                 *_mbed_socket;            //owned
 
 friend class Test_M2MConnectionHandlerPimpl;
 friend class Test_M2MConnectionHandlerPimpl_mbed;
