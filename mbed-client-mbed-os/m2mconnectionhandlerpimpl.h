@@ -21,7 +21,8 @@
 #include "mbed-client/m2mconnectionobserver.h"
 #include "mbed-client/m2mconnectionsecurity.h"
 #include "nsdl-c/sn_nsdl.h"
-#include "mbed-net-sockets/UDPSocket.h"
+#include "mbed-net-sockets/Socket.h"
+#include "mbed-net-socket-abstract/socket_api.h"
 
 using namespace mbed::Sockets::v0;
 
@@ -33,7 +34,21 @@ class M2MSecurity;
  * This class handles the socket connection for LWM2M Client
  */
 
+
 class M2MConnectionHandlerPimpl {
+private:
+    class MbedSocket : public Socket{
+    public:
+        MbedSocket(socket_stack_t stack, socket_proto_family_t fa) : Socket(stack){_socket.family = fa;}
+
+        ~MbedSocket(){}
+
+        socket_error_t connect(const SocketAddr *address, const uint16_t port){
+            if( _socket.api )
+                return _socket.api->connect(&_socket, address->getAddr(), port);
+            return SOCKET_ERROR_UNKNOWN;
+        }
+    };
 
 public:
 
@@ -90,22 +105,22 @@ public:
     void stop_listening();
 
     /**
-     * @brief sendToSocket Sends directly to socket. This is used by
+     * @brief send_to_socket Sends directly to socket. This is used by
      * security classes to send after data has been encrypted.
      * @param buf Buffer to send
      * @param len Length of a buffer
      * @return Number of bytes sent or -1 if failed
      */
-    int sendToSocket(const unsigned char *buf, size_t len);
+    int send_to_socket(const unsigned char *buf, size_t len);
 
     /**
-     * @brief receiveFromSocket Receives directly from a socket. This
+     * @brief receive_from_socket Receives directly from a socket. This
      * is used by security classes to receive raw data to be decrypted.
      * @param buf Buffer to send
      * @param len Length of a buffer
      * @return Number of bytes read or -1 if failed.
      */
-    int receiveFromSocket(unsigned char *buf, size_t len);
+    int receive_from_socket(unsigned char *buf, size_t len);
 
 private:
 
@@ -152,7 +167,7 @@ private:
     bool                                        _resolved;
     socket_stack_t                              _socket_stack;
     bool                                        _is_handshaking;
-    UDPSocket                                   *_socket;            //owned
+    MbedSocket                                 *_mbed_socket;            //owned
 
 friend class Test_M2MConnectionHandlerPimpl;
 friend class Test_M2MConnectionHandlerPimpl_mbed;
