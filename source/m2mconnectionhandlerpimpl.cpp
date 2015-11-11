@@ -276,7 +276,7 @@ void M2MConnectionHandlerPimpl::receive_handler(Socket */*socket*/)
         if(rcv_size >= 0){
             _observer.data_available((uint8_t*)_receive_buffer,
                                      rcv_size, *_socket_address);
-        }else{
+        } else if (M2MConnectionHandler::CONNECTION_ERROR_WANTS_READ != rcv_size) {
             _observer.socket_error(1);
             return;
         }
@@ -393,4 +393,10 @@ void M2MConnectionHandlerPimpl::error_handler(Socket */*socket*/,
     if(SOCKET_ERROR_NONE != error) {
         _observer.socket_error(2);
     }
+}
+
+void M2MConnectionHandlerPimpl::handle_connection_error(int /*error*/)
+{
+    //This will come from M2MConnectionSecurity class
+    _observer.socket_error(4);
 }
