@@ -21,7 +21,7 @@
 #include "mbed-client/m2mconnectionobserver.h"
 #include "mbed-client/m2mconnectionsecurity.h"
 #include "nsdl-c/sn_nsdl.h"
-#include "mbed-net-sockets/Socket.h"
+#include "sockets/Socket.h"
 #include "mbed-net-socket-abstract/socket_api.h"
 
 using namespace mbed::Sockets::v0;
@@ -121,6 +121,12 @@ public:
      * @return Number of bytes read or -1 if failed.
      */
     int receive_from_socket(unsigned char *buf, size_t len);
+
+    /**
+    * @brief Error handling for DTLS connectivity.
+    * @param error, Error code from TLS library
+    */
+    void handle_connection_error(int error);
 
 private:
 
