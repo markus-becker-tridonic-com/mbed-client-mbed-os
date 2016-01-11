@@ -97,8 +97,7 @@ M2MConnectionHandlerPimpl::~M2MConnectionHandlerPimpl()
         free(_socket_address);
     }
 
-#if 0
-//should be #ifndef ILB
+#if !defined(YOTTA_CFG_TRIDONIC_ILB_DEVICE)
     delete _security_impl;
 #endif
 }
@@ -145,9 +144,7 @@ bool M2MConnectionHandlerPimpl::send_data(uint8_t *data,
     }
     socket_error_t error = SOCKET_ERROR_NONE;
     if( _use_secure_connection ){
-#warning "mab: check M2MConnectionHandlerPimpl::send_data"
-#if 0
-//should be #ifndef ILB
+#if !defined(YOTTA_CFG_TRIDONIC_ILB_DEVICE)
         if( _security_impl->send_message(data, data_len) > 0){
             error = SOCKET_ERROR_NONE;
         }else{
@@ -169,6 +166,10 @@ bool M2MConnectionHandlerPimpl::send_data(uint8_t *data,
             error = _mbed_socket->send(d, d_len);
             free(d);
         }else{
+        	/*if (_resolved_Address.startsWith("ffff:ffff:ffff:ffff"))
+        	{
+        		error = _ilb_socket->send_to(data, data_len,_resolved_Address,_server_port);
+        	} else*/
             error = _mbed_socket->send_to(data, data_len,_resolved_Address,_server_port);
         }
     }
@@ -239,9 +240,7 @@ void M2MConnectionHandlerPimpl::receive_handshake_handler(Socket */*socket*/)
 {
     memset(_receive_buffer, 0, BUFFER_LENGTH);
     if( _is_handshaking ){
-#warning "mab: check M2MConnectionHandlerPimpl::receive_handshake_handler"
-#if 0
-//should be #ifndef ILB
+#if !defined(YOTTA_CFG_TRIDONIC_ILB_DEVICE)
         int ret = _security_impl->continue_connecting();
         if( ret == M2MConnectionHandler::CONNECTION_ERROR_WANTS_READ ){ //We wait for next readable event
             return;
@@ -269,9 +268,7 @@ void M2MConnectionHandlerPimpl::receive_handler(Socket */*socket*/)
     size_t receive_length = sizeof(_receive_buffer);
 
     if( _use_secure_connection ){
-#warning "mab: check M2MConnectionHandlerPimpl::receive_handler"
-#if 0
-//should be #ifndef ILB
+#if !defined(YOTTA_CFG_TRIDONIC_ILB_DEVICE)
         int rcv_size = _security_impl->read(_receive_buffer, receive_length);
         if(rcv_size >= 0){
             _observer.data_available((uint8_t*)_receive_buffer,
@@ -355,9 +352,7 @@ void M2MConnectionHandlerPimpl::dns_handler(Socket */*socket*/, struct socket_ad
         _mbed_socket->connect(_resolved_Address, _server_port);
     }
 
-#warning "mab: check M2MConnectionHandlerPimpl::dns_handler"
-//should be #ifndef ILB
-#if 0
+#if !defined(YOTTA_CFG_TRIDONIC_ILB_DEVICE)
     if( _security ){
         if( _security->resource_value_int(M2MSecurity::SecurityMode) == M2MSecurity::Certificate ||
            _security->resource_value_int(M2MSecurity::SecurityMode) == M2MSecurity::Psk ){
